@@ -17,8 +17,22 @@ export default function ThankYouPage() {
             <p className="mt-3 leading-7 text-[#755e58]">We&apos;ve sent you the information you need to continue with your consultation.</p>
             <p className="mt-4 font-extrabold">Check your inbox and follow the instructions in the email.</p>
           </article>
-          <article className="card bg-white p-6 md:p-8">
+
+          <article className="card row-span-2 bg-white p-6 md:p-8">
             <span className="text-xs font-extrabold uppercase tracking-[.14em] text-[#bc4f4f]">Step 2</span>
+            <h2 className="mt-3 text-2xl font-black">Watch This Short Video</h2>
+            <p className="mt-3 leading-7 text-[#755e58]">Before your consultation, watch the video below.</p>
+            <p className="mt-3 leading-7 text-[#755e58]">It will help you understand what happens next and how to get the most value from your consultation.</p>
+            <div className="mt-6 grid aspect-video place-items-center rounded-2xl border border-[#f3cd97] bg-[radial-gradient(circle_at_center,rgba(233,139,80,.2),transparent_45%),#3d2424] text-center shadow-inner">
+              <div>
+                <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#bc4f4f] pl-1 text-xl text-white shadow-lg" aria-hidden="true">▶</span>
+                <p className="mt-4 text-xs font-extrabold uppercase tracking-[.16em] text-[#fef2a0]">Video Here</p>
+              </div>
+            </div>
+          </article>
+
+          <article className="card bg-white p-6 md:p-8">
+            <span className="text-xs font-extrabold uppercase tracking-[.14em] text-[#bc4f4f]">Step 3</span>
             <h2 className="mt-3 text-2xl font-black">Have a Question? Message Me on WhatsApp</h2>
             <p className="mt-3 leading-7 text-[#755e58]">If you have any questions before the consultation, you can contact me directly on WhatsApp.</p>
             <a className="cta mt-6 w-full sm:w-auto" href="https://t.ly/PicEi" target="_blank" rel="noopener noreferrer">Message Me on WhatsApp →</a>
