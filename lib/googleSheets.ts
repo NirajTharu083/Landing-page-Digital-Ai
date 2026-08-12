@@ -152,7 +152,7 @@ export async function saveLead(lead: Lead, emailStatus: { owner: string; custome
   const token = await accessToken();
   await ensurePremiumLayout(token, spreadsheetId);
   const result = await googleFetch(
-    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${SHEET_NAME}!A8:M`)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`,
+    `spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${SHEET_NAME}!A8:M`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`,
     token,
     {
       method: "POST",
