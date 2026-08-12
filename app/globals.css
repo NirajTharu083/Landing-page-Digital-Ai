@@ -63,6 +63,64 @@ button, input, textarea { font: inherit; }
 }
 .display { letter-spacing: -.055em; line-height: .98; }
 
+/* Theme-only overrides around the unmodified Flodesk embed. */
+.flodesk-theme [data-ff-el="root"] { width: 100% !important; color: var(--text) !important; }
+.flodesk-theme [data-ff-el="root"] [data-ff-el="container"],
+.flodesk-theme [data-ff-el="root"] [class$="__container"],
+.flodesk-theme [data-ff-el="root"] [class$="__wrapper"] {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+.flodesk-theme [data-ff-el="root"] [class$="__title"],
+.flodesk-theme [data-ff-el="root"] [class$="__subtitle"] { display: none !important; }
+.flodesk-theme [data-ff-el="root"] [class$="__field"] { margin-bottom: 1rem !important; }
+.flodesk-theme [data-ff-el="root"] [class$="__control"] {
+  width: 100% !important;
+  height: 3.5rem !important;
+  border: 1px solid rgba(61, 36, 36, .16) !important;
+  border-radius: .8rem !important;
+  background: #fff !important;
+  padding: 1rem !important;
+  color: var(--text) !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  transition: border-color .2s ease, box-shadow .2s ease !important;
+}
+.flodesk-theme [data-ff-el="root"] [class$="__control"]:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(188, 79, 79, .1) !important;
+  outline: none !important;
+}
+.flodesk-theme [data-ff-el="root"] [class$="__label"] {
+  padding-inline: 1rem !important;
+  color: var(--muted) !important;
+  font-family: inherit !important;
+}
+.flodesk-theme [data-ff-el="root"] [data-ff-el="submit"] {
+  min-height: 3.5rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, var(--primary), #d76653) !important;
+  color: #fff !important;
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 14px 30px rgba(188, 79, 79, .24) !important;
+}
+.flodesk-theme [data-ff-el="root"] [data-ff-el="submit"]:hover { transform: translateY(-2px); }
+.flodesk-theme [data-ff-el="root"] [data-ff-el="success"] {
+  border-radius: 1rem !important;
+  background: #f8ead5 !important;
+  padding: 1.5rem !important;
+}
+.flodesk-theme [data-ff-el="root"] [class$="__success-message"] {
+  color: var(--text) !important;
+  font-family: inherit !important;
+  font-weight: 700 !important;
+}
+
 @media (min-width: 768px) {
   .container-shell { width: min(100% - 4rem, 1120px); }
   .section-pad { padding-block: 6.5rem; }

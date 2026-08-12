@@ -1,49 +1,84 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type Fields = "name" | "email" | "whatsapp" | "business" | "url";
-type Errors = Partial<Record<Fields, string>>;
+const FLODESK_ROOT = ".ff-6a76ee9522ed8801a56acba8";
+
+function decodeConfig(value: string) {
+  const bytes = Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes)) as Record<string, unknown>;
+}
+
+function encodeConfig(value: Record<string, unknown>) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = "";
+  bytes.forEach((byte) => (binary += String.fromCharCode(byte)));
+  return btoa(binary);
+}
 
 export default function CTAForm() {
-  const [errors, setErrors] = useState<Errors>({});
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const embedHost = useRef<HTMLDivElement>(null);
+  const [loadError, setLoadError] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const values = Object.fromEntries(form.entries()) as Record<string, string>;
-    const next: Errors = {};
-    if (!values.name?.trim()) next.name = "Please enter your full name.";
-    if (!values.email?.trim()) next.email = "Please enter your active email.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) next.email = "Please enter a valid email address.";
-    if (!values.whatsapp?.trim()) next.whatsapp = "Please enter your WhatsApp number.";
-    else if (values.whatsapp.replace(/\D/g, "").length < 7) next.whatsapp = "Please enter a valid WhatsApp number.";
-    if (!values.business?.trim()) next.business = "Please enter your business name.";
-    if (values.url?.trim()) {
-      try { new URL(values.url); } catch { next.url = "Please enter a complete URL, including https://"; }
-    }
-    setErrors(next);
-    if (Object.keys(next).length) return;
-    setSubmitError("");
-    setSubmitting(true);
-    try {
-      const response = await fetch("/api/consultation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || "Submission failed.");
-      window.location.assign("/thank-you");
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "We could not submit your request. Please try again.");
-      setSubmitting(false);
-    }
-  }
+  useEffect(() => {
+    const host = embedHost.current;
+    if (!host) return;
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | undefined;
+    let observer: MutationObserver | undefined;
 
-  const fieldClass = "mt-2 min-h-14 w-full rounded-xl border border-[#3d2424]/15 bg-white px-4 text-base text-[#3d2424] outline-none transition placeholder:text-[#755e58]/60 focus:border-[#bc4f4f] focus:ring-4 focus:ring-[#bc4f4f]/10";
+    async function mountFlodesk() {
+      try {
+        const response = await fetch("/flodesk-form.html");
+        if (!response.ok) throw new Error("Unable to load the Flodesk form.");
+        const embedHtml = await response.text();
+        if (cancelled || !host) return;
+
+        host.innerHTML = embedHtml;
+        const root = host.querySelector<HTMLElement>(FLODESK_ROOT);
+        const configElement = root?.querySelector<HTMLElement>("[data-ff-el='config']");
+        const encodedConfig = configElement?.getAttribute("data-ff-config");
+        if (!root || !configElement || !encodedConfig) throw new Error("The Flodesk embed is incomplete.");
+
+        // Flodesk must finish its own submission and enter its native success
+        // stage before this site performs the delayed /thanks redirect.
+        const config = decodeConfig(encodedConfig);
+        config.onSuccess = { mode: "message", message: "", redirectUrl: "" };
+        configElement.setAttribute("data-ff-config", encodeConfig(config));
+
+        observer = new MutationObserver(() => {
+          if (root.getAttribute("data-ff-stage") !== "success" || redirectTimer) return;
+          redirectTimer = setTimeout(() => window.location.assign("/thanks"), 1800);
+        });
+        observer.observe(root, { attributes: true, attributeFilter: ["data-ff-stage"] });
+
+        // Scripts inserted through innerHTML do not execute automatically.
+        // Recreate the supplied script tags unchanged so Flodesk's native
+        // loader, tracking, capture, and automation flow all remain active.
+        for (const oldScript of Array.from(host.querySelectorAll("script"))) {
+          const script = document.createElement("script");
+          for (const attribute of Array.from(oldScript.attributes)) {
+            script.setAttribute(attribute.name, attribute.value);
+          }
+          script.text = oldScript.text;
+          oldScript.replaceWith(script);
+        }
+
+        host.dataset.flodeskReady = "true";
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) setLoadError(true);
+      }
+    }
+
+    mountFlodesk();
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+      if (redirectTimer) clearTimeout(redirectTimer);
+      host.innerHTML = "";
+    };
+  }, []);
 
   return (
     <section id="consultation" className="section-pad scroll-mt-4 bg-[linear-gradient(180deg,#fffaf1,#f3cd97)]">
@@ -55,34 +90,14 @@ export default function CTAForm() {
           <div className="mt-7 flex items-center gap-3 text-sm font-bold text-[#755e58]"><span className="grid size-9 place-items-center rounded-full bg-white">✓</span> Free and customized for your business</div>
         </div>
 
-        <form className="card bg-white p-5 sm:p-8 md:p-10" onSubmit={handleSubmit} noValidate>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Full Name" name="name" placeholder="Enter your full name" error={errors.name} inputClass={fieldClass} autoComplete="name" />
-            <Field label="Active Email" name="email" type="email" placeholder="Enter your active email" error={errors.email} inputClass={fieldClass} autoComplete="email" />
-            <Field label="WhatsApp Number" name="whatsapp" type="tel" placeholder="Enter your WhatsApp number" error={errors.whatsapp} inputClass={fieldClass} autoComplete="tel" />
-            <Field label="Business Name" name="business" placeholder="Enter your business name" error={errors.business} inputClass={fieldClass} autoComplete="organization" />
+        <div className="flodesk-theme card min-w-0 bg-white p-5 sm:p-8 md:p-10">
+          <div ref={embedHost} aria-live="polite">
+            {!loadError && <p className="py-8 text-center text-sm font-semibold text-[#755e58]">Loading secure consultation form…</p>}
           </div>
-          <div className="mt-5"><Field label="Website or Facebook URL" name="url" type="url" placeholder="https://yourwebsite.com" error={errors.url} inputClass={fieldClass} required={false} autoComplete="url" /></div>
-          <div className="mt-5">
-            <label className="text-sm font-extrabold" htmlFor="message">Anything You Want to Say</label>
-            <textarea id="message" name="message" rows={4} className={`${fieldClass} resize-y py-4`} placeholder="Tell me about your current marketing challenge" />
-          </div>
-          <button className="cta mt-6 w-full disabled:cursor-wait disabled:opacity-70" disabled={submitting} type="submit">{submitting ? "Submitting…" : "Book My Free Consultation"} <span aria-hidden="true">→</span></button>
-          {submitError && <p className="mt-4 rounded-xl bg-[#bc4f4f]/10 p-3 text-center text-sm font-semibold text-[#a53636]" role="alert">{submitError}</p>}
+          {loadError && <p className="rounded-xl bg-[#bc4f4f]/10 p-4 text-center text-sm font-semibold text-[#a53636]" role="alert">The consultation form could not load. Please refresh the page and try again.</p>}
           <p className="mt-4 text-center text-xs font-semibold text-[#755e58]">🔒 We respect your privacy. No spam.</p>
-        </form>
+        </div>
       </div>
     </section>
-  );
-}
-
-function Field({ label, name, placeholder, error, inputClass, type = "text", required = true, autoComplete }: { label: string; name: Fields; placeholder: string; error?: string; inputClass: string; type?: string; required?: boolean; autoComplete?: string }) {
-  const errorId = `${name}-error`;
-  return (
-    <div>
-      <label className="text-sm font-extrabold" htmlFor={name}>{label}{required && <span className="text-[#bc4f4f]"> *</span>}</label>
-      <input id={name} name={name} type={type} placeholder={placeholder} autoComplete={autoComplete} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className={`${inputClass} ${error ? "border-[#bc4f4f]" : ""}`} />
-      {error && <p className="mt-1.5 text-xs font-semibold text-[#a53636]" id={errorId}>{error}</p>}
-    </div>
   );
 }
