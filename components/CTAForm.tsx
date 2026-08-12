@@ -7,9 +7,10 @@ type Errors = Partial<Record<Fields, string>>;
 
 export default function CTAForm() {
   const [errors, setErrors] = useState<Errors>({});
+  const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const values = Object.fromEntries(form.entries()) as Record<string, string>;
@@ -25,8 +26,21 @@ export default function CTAForm() {
     }
     setErrors(next);
     if (Object.keys(next).length) return;
+    setSubmitError("");
     setSubmitting(true);
-    window.setTimeout(() => window.location.assign("/thank-you"), 500);
+    try {
+      const response = await fetch("/api/consultation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Submission failed.");
+      window.location.assign("/thank-you");
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "We could not submit your request. Please try again.");
+      setSubmitting(false);
+    }
   }
 
   const fieldClass = "mt-2 min-h-14 w-full rounded-xl border border-[#3d2424]/15 bg-white px-4 text-base text-[#3d2424] outline-none transition placeholder:text-[#755e58]/60 focus:border-[#bc4f4f] focus:ring-4 focus:ring-[#bc4f4f]/10";
@@ -54,6 +68,7 @@ export default function CTAForm() {
             <textarea id="message" name="message" rows={4} className={`${fieldClass} resize-y py-4`} placeholder="Tell me about your current marketing challenge" />
           </div>
           <button className="cta mt-6 w-full disabled:cursor-wait disabled:opacity-70" disabled={submitting} type="submit">{submitting ? "Submitting…" : "Book My Free Consultation"} <span aria-hidden="true">→</span></button>
+          {submitError && <p className="mt-4 rounded-xl bg-[#bc4f4f]/10 p-3 text-center text-sm font-semibold text-[#a53636]" role="alert">{submitError}</p>}
           <p className="mt-4 text-center text-xs font-semibold text-[#755e58]">🔒 We respect your privacy. No spam.</p>
         </form>
       </div>
