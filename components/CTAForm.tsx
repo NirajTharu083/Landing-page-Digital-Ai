@@ -26,6 +26,48 @@ export default function CTAForm() {
     let cancelled = false;
     let redirectTimer: ReturnType<typeof setTimeout> | undefined;
     let observer: MutationObserver | undefined;
+    let submittedLead: Record<string, string> | undefined;
+    let spreadsheetSyncStarted = false;
+
+    const captureLead = (event: Event) => {
+      if (!(event.target instanceof HTMLFormElement)) return;
+      const fields = new FormData(event.target);
+      submittedLead = {
+        name: String(fields.get("firstName") ?? ""),
+        email: String(fields.get("email") ?? ""),
+        whatsapp: String(fields.get("fields.whatsappNumber") ?? ""),
+        business: String(fields.get("fields.businessName") ?? ""),
+        url: String(fields.get("fields.websiteLink") ?? ""),
+        message: String(fields.get("fields.") ?? ""),
+      };
+    };
+
+    host.addEventListener("submit", captureLead, true);
+
+    async function syncSpreadsheetAfterFlodeskSuccess() {
+      if (spreadsheetSyncStarted) return;
+      spreadsheetSyncStarted = true;
+      const minimumDelay = new Promise((resolve) => setTimeout(resolve, 1800));
+
+      try {
+        if (!submittedLead) throw new Error("Submitted form values were unavailable.");
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch("/api/consultation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submittedLead),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error("Spreadsheet sync failed.");
+      } catch (error) {
+        console.error(error);
+      }
+
+      await minimumDelay;
+      window.location.assign("/thanks");
+    }
 
     async function mountFlodesk() {
       try {
@@ -48,7 +90,7 @@ export default function CTAForm() {
 
         observer = new MutationObserver(() => {
           if (root.getAttribute("data-ff-stage") !== "success" || redirectTimer) return;
-          redirectTimer = setTimeout(() => window.location.assign("/thanks"), 1800);
+          redirectTimer = setTimeout(() => void syncSpreadsheetAfterFlodeskSuccess(), 0);
         });
         observer.observe(root, { attributes: true, attributeFilter: ["data-ff-stage"] });
 
@@ -75,6 +117,7 @@ export default function CTAForm() {
     return () => {
       cancelled = true;
       observer?.disconnect();
+      host.removeEventListener("submit", captureLead, true);
       if (redirectTimer) clearTimeout(redirectTimer);
       host.innerHTML = "";
     };
