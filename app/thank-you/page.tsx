@@ -23,11 +23,16 @@ export default function ThankYouPage() {
             <h2 className="mt-3 text-2xl font-black">Watch This Short Video</h2>
             <p className="mt-3 leading-7 text-[#755e58]">Before your consultation, watch the video below.</p>
             <p className="mt-3 leading-7 text-[#755e58]">It will help you understand what happens next and how to get the most value from your consultation.</p>
-            <div className="mt-6 grid aspect-video place-items-center rounded-2xl border border-[#f3cd97] bg-[radial-gradient(circle_at_center,rgba(233,139,80,.2),transparent_45%),#3d2424] text-center shadow-inner">
-              <div>
-                <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#bc4f4f] pl-1 text-xl text-white shadow-lg" aria-hidden="true">▶</span>
-                <p className="mt-4 text-xs font-extrabold uppercase tracking-[.16em] text-[#fef2a0]">Video Here</p>
-              </div>
+            <div className="mx-auto mt-6 w-full max-w-[20rem] overflow-hidden rounded-[1.75rem] border-4 border-[#3d2424] bg-[#3d2424] shadow-xl">
+              <iframe
+                className="aspect-[9/16] w-full"
+                src="https://www.youtube.com/embed/KDlCFhh1tgY?rel=0"
+                title="What happens next in your AI marketing consultation"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
             </div>
           </article>
 
