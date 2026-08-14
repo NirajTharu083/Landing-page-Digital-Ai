@@ -13,6 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "Free AI Marketing Consultation | Digital Niraj",
     description:
       "Book a free AI marketing consultation and get a customized marketing plan designed to help your business generate leads, improve marketing, and grow smarter.",
+    icons: {
+      icon: [{ url: "/fav.png", type: "image/png" }],
+      shortcut: "/fav.png",
+      apple: "/fav.png",
+    },
     openGraph: {
       title: "Get Your Free Customized AI Marketing Plan",
       description:
